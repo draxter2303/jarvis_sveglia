@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/app_name"
+            android:textColor="@color/text"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="Collegata al tuo Google Calendar"
+            android:textColor="@color/muted"
+            android:textSize="14sp" />
+
+        <!-- Permessi mancanti -->
+        <LinearLayout
+            android:id="@+id/permBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/card_warn"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/permText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/warn"
+                android:textSize="15sp" />
+
+            <Button
+                android:id="@+id/permButton"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Concedi" />
+        </LinearLayout>
+
+        <!-- Prossima sveglia -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/card"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="PROSSIMA SVEGLIA"
+                    android:textColor="@color/muted"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.08" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchEnabled"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/nextAlarm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="…"
+                android:textColor="@color/accent"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnCancelSnooze"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="6dp"
+            android:text="SVEGLIE PROGRAMMATE"
+            android:textColor="@color/muted"
+            android:textSize="12sp"
+            android:letterSpacing="0.08" />
+
+        <TextView
+            android:id="@+id/alarmList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/card"
+            android:fontFamily="monospace"
+            android:lineSpacingExtra="6dp"
+            android:padding="16dp"
+            android:text="—"
+            android:textColor="@color/text"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/syncInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/muted"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnSync"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1"
+                android:text="Aggiorna ora" />
+
+            <Button
+                android:id="@+id/btnTest"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:text="Prova (10 s)" />
+        </LinearLayout>
+
+        <!-- Impostazioni -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="6dp"
+            android:text="IMPOSTAZIONI"
+            android:textColor="@color/muted"
+            android:textSize="12sp"
+            android:letterSpacing="0.08" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                style="@style/Label"
+                android:text="Suona per gli eventi il cui titolo contiene" />
+
+            <EditText
+                android:id="@+id/inputKeyword"
+                style="@style/Field"
+                android:inputType="text" />
+
+            <TextView
+                style="@style/Label"
+                android:layout_marginTop="12dp"
+                android:text="Minuti di posticipo" />
+
+            <EditText
+                android:id="@+id/inputSnooze"
+                style="@style/Field"
+                android:inputType="number" />
+
+            <TextView
+                style="@style/Label"
+                android:layout_marginTop="12dp"
+                android:text="Minuti di anticipo rispetto all'evento" />
+
+            <EditText
+                android:id="@+id/inputOffset"
+                style="@style/Field"
+                android:inputType="number" />
+
+            <Button
+                android:id="@+id/btnSave"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="Salva" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="24dp"
+            android:text="L'app legge il calendario del telefono, che Android tiene sincronizzato con Google Calendar. Quando sposti, aggiungi o cancelli un evento, la sveglia si aggiorna da sola."
+            android:textColor="@color/muted"
+            android:textSize="12sp" />
+    </LinearLayout>
+</ScrollView>

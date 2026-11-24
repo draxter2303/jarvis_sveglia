@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="28dp">
+
+    <ImageView
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:contentDescription="Sveglia"
+        android:src="@drawable/ic_alarm"
+        android:tint="@color/accent" />
+
+    <TextView
+        android:id="@+id/alarmTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:textColor="@color/text"
+        android:textSize="84sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/alarmTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="@color/accent"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/alarmDesc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:maxLines="6"
+        android:textColor="@color/muted"
+        android:textSize="15sp" />
+
+    <Space
+        android:layout_width="1dp"
+        android:layout_height="56dp" />
+
+    <Button
+        android:id="@+id/btnStop"
+        style="@style/Widget.Material3.Button"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:text="Stop"
+        android:textSize="22sp" />
+
+    <Button
+        android:id="@+id/btnSnooze"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginTop="12dp"
+        android:textSize="18sp" />
+</LinearLayout>

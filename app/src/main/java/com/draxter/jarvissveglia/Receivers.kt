@@ -14,9 +14,39 @@ class AlarmReceiver : BroadcastReceiver() {
         val svc = Intent(ctx, AlarmService::class.java)
             .setAction(AlarmService.ACTION_START)
             .putExtras(intent)
-        ContextCompat.startForegroundService(ctx, svc)
+        try {
+            ContextCompat.startForegroundService(ctx, svc)
+        } catch (e: Exception) {
+            // Senza permesso "sveglie esatte" Android 12+ può vietare l'avvio del servizio:
+            // in quel caso mostra almeno la sveglia come notifica a schermo intero.
+            fallbackNotification(ctx, intent)
+        }
         // Programma subito le sveglie successive.
         SyncWork.syncSoon(ctx, "dopo una sveglia")
+    }
+}
+
+private fun fallbackNotification(ctx: Context, intent: Intent) {
+    val title = AlarmService.cleanTitle(intent.getStringExtra(AlarmScheduler.EXTRA_TITLE) ?: "Sveglia")
+    AlarmState.title = title
+    AlarmState.description = intent.getStringExtra(AlarmScheduler.EXTRA_DESC) ?: ""
+    val open = android.app.PendingIntent.getActivity(
+        ctx, 5, Intent(ctx, MainActivity::class.java),
+        android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+    )
+    val n = androidx.core.app.NotificationCompat.Builder(ctx, App.CHANNEL_ALARM)
+        .setSmallIcon(R.drawable.ic_alarm)
+        .setContentTitle(title)
+        .setContentText("Apri l'app e concedi il permesso \"Sveglie e promemoria\"")
+        .setCategory(androidx.core.app.NotificationCompat.CATEGORY_ALARM)
+        .setPriority(androidx.core.app.NotificationCompat.PRIORITY_MAX)
+        .setDefaults(androidx.core.app.NotificationCompat.DEFAULT_ALL)
+        .setFullScreenIntent(open, true)
+        .setAutoCancel(true)
+        .build()
+    try {
+        androidx.core.app.NotificationManagerCompat.from(ctx).notify(8, n)
+    } catch (_: SecurityException) {
     }
 }
 

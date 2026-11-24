@@ -127,10 +127,16 @@ class AlarmService : Service() {
             getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         }
         val pattern = longArrayOf(0, 800, 600)
-        vibrator?.vibrate(
-            VibrationEffect.createWaveform(pattern, 0),
-            AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).build()
-        )
+        val effect = VibrationEffect.createWaveform(pattern, 0)
+        if (Build.VERSION.SDK_INT >= 33) {
+            vibrator?.vibrate(
+                effect,
+                android.os.VibrationAttributes.createForUsage(android.os.VibrationAttributes.USAGE_ALARM)
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator?.vibrate(effect, AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).build())
+        }
     }
 
     private fun stopSound() {

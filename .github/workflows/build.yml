@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -37,3 +40,20 @@ jobs:
         with:
           name: JarvisSveglia-apk
           path: JarvisSveglia.apk
+
+      - name: Pubblica APK (release "ultima" + ramo apk)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete ultima --yes --cleanup-tag || true
+          gh release create ultima JarvisSveglia.apk \
+            --title "Jarvis Sveglia (ultima versione)" \
+            --notes "Compilata dal commit ${GITHUB_SHA::7}. Scarica JarvisSveglia.apk dal telefono e installala."
+          mkdir -p /tmp/apkbranch && cp JarvisSveglia.apk /tmp/apkbranch/
+          cd /tmp/apkbranch
+          git init -q -b apk
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add JarvisSveglia.apk
+          git commit -q -m "APK dal commit ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" apk

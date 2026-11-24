@@ -158,6 +158,44 @@
                 android:text="Prova (10 s)" />
         </LinearLayout>
 
+        <!-- Diagnostica -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="6dp"
+            android:text="COSA VEDE L'APP NEL CALENDARIO"
+            android:textColor="@color/muted"
+            android:textSize="12sp"
+            android:letterSpacing="0.08" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/diagText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="3dp"
+                android:text="…"
+                android:textColor="@color/text"
+                android:textIsSelectable="true"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/btnEnableCalendars"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Attiva la sincronizzazione dei calendari Google"
+                android:visibility="gone" />
+        </LinearLayout>
+
         <!-- Impostazioni -->
         <TextView
             android:layout_width="wrap_content"

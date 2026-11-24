@@ -39,6 +39,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var permBox: View
     private lateinit var permText: TextView
     private lateinit var permButton: Button
+    private lateinit var diagText: TextView
+    private lateinit var enableCalendarsBtn: Button
+
+    private val askWriteCalendar = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) enableCalendars()
+        else Toast.makeText(this, "Senza questo permesso attivala dall'app Calendario", Toast.LENGTH_LONG).show()
+    }
 
     private val askPermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -64,6 +73,12 @@ class MainActivity : AppCompatActivity() {
         permBox = findViewById(R.id.permBox)
         permText = findViewById(R.id.permText)
         permButton = findViewById(R.id.permButton)
+        diagText = findViewById(R.id.diagText)
+        enableCalendarsBtn = findViewById(R.id.btnEnableCalendars)
+        enableCalendarsBtn.setOnClickListener {
+            if (CalendarRepo.hasWritePermission(this)) enableCalendars()
+            else askWriteCalendar.launch(Manifest.permission.WRITE_CALENDAR)
+        }
 
         enabledSwitch.isChecked = Prefs.enabled(this)
         keywordInput.setText(Prefs.keyword(this))
@@ -115,7 +130,13 @@ class MainActivity : AppCompatActivity() {
         updatePermissionBox()
         io.execute {
             val items = if (sync) AlarmScheduler.sync(this, "app aperta") else Prefs.scheduled(this)
-            runOnUiThread { render(items) }
+            val diag = CalendarRepo.diagnose(this)
+            val disabled = CalendarRepo.disabledGoogleCalendars(this).isNotEmpty()
+            runOnUiThread {
+                render(items)
+                diagText.text = diag
+                enableCalendarsBtn.visibility = if (disabled) View.VISIBLE else View.GONE
+            }
         }
     }
 
@@ -128,7 +149,7 @@ class MainActivity : AppCompatActivity() {
             nextAlarm.text = "Sveglie disattivate"
         } else if (items.isEmpty()) {
             nextAlarm.text = if (CalendarRepo.hasPermission(this))
-                "Nessun evento con \"${Prefs.keyword(this)}\" nei prossimi ${Prefs.lookaheadDays(this)} giorni"
+                "Nessun evento con \"${Prefs.keyword(this)}\" nei prossimi ${Prefs.lookaheadDays(this)} giorni.\nGuarda la sezione \"Cosa vede l'app\" qui sotto."
             else "Serve l'accesso al calendario"
         } else {
             val first = items.first()
@@ -151,6 +172,22 @@ class MainActivity : AppCompatActivity() {
         val last = Prefs.lastSync(this)
         syncInfo.text = if (last == 0L) "Mai sincronizzato" else
             "Ultimo aggiornamento: ${SimpleDateFormat("d MMM HH:mm:ss", Locale.ITALY).format(Date(last))} (${Prefs.lastSyncReason(this)})"
+    }
+
+    private fun enableCalendars() {
+        io.execute {
+            val n = CalendarRepo.enableGoogleCalendars(this)
+            runOnUiThread {
+                Toast.makeText(
+                    this,
+                    if (n > 0) "Calendari attivati: la sincronizzazione con Google parte ora" else "Nessun calendario da attivare",
+                    Toast.LENGTH_LONG
+                ).show()
+                refresh(sync = true)
+                nextAlarm.postDelayed({ refresh(sync = true) }, 10000)
+                nextAlarm.postDelayed({ refresh(sync = true) }, 30000)
+            }
+        }
     }
 
     private fun relativeDay(ms: Long): String {

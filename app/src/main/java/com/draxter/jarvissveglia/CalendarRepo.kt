@@ -38,16 +38,29 @@ object CalendarRepo {
         ctx, Manifest.permission.WRITE_CALENDAR
     ) == PackageManager.PERMISSION_GRANTED
 
-    private fun instancesUri(ctx: Context, from: Long) =
+    private fun instancesUri(ctx: Context, from: Long, days: Int = Prefs.lookaheadDays(ctx)) =
         CalendarContract.Instances.CONTENT_URI.buildUpon().also {
             ContentUris.appendId(it, from)
-            ContentUris.appendId(it, from + Prefs.lookaheadDays(ctx) * 24L * 60 * 60 * 1000)
+            ContentUris.appendId(it, from + days * 24L * 60 * 60 * 1000)
         }.build()
 
-    fun queryAlarms(ctx: Context): List<AlarmItem> {
-        if (!hasPermission(ctx)) return emptyList()
+    fun isAlarmTitle(ctx: Context, title: String): Boolean {
         val keyword = Prefs.keyword(ctx).trim().lowercase()
-        if (keyword.isBlank()) return emptyList()
+        return keyword.isNotBlank() && title.lowercase().contains(keyword)
+    }
+
+    /** Sveglie: eventi il cui titolo contiene la parola chiave. */
+    fun queryAlarms(ctx: Context): List<AlarmItem> =
+        queryEvents(ctx, Prefs.lookaheadDays(ctx)).filter { isAlarmTitle(ctx, it.title) }
+            .distinctBy { it.begin / 60_000L } // stesso orario da calendari diversi
+
+    /** Promemoria: tutti gli altri eventi con un orario. */
+    fun queryReminders(ctx: Context): List<AlarmItem> =
+        queryEvents(ctx, Prefs.REMINDER_DAYS).filter { !isAlarmTitle(ctx, it.title) }
+            .distinctBy { "${it.begin / 60_000L}|${it.title}" }
+
+    private fun queryEvents(ctx: Context, days: Int): List<AlarmItem> {
+        if (!hasPermission(ctx)) return emptyList()
 
         val now = System.currentTimeMillis()
         val projection = arrayOf(
@@ -57,18 +70,17 @@ object CalendarRepo {
             CalendarContract.Instances.DESCRIPTION,
             CalendarContract.Instances.ALL_DAY,
             CalendarContract.Instances.STATUS,
-            CalendarContract.Instances.CALENDAR_DISPLAY_NAME
+            CalendarContract.Instances.CALENDAR_DISPLAY_NAME,
+            CalendarContract.Instances.END
         )
         val out = mutableListOf<AlarmItem>()
         try {
-            // Nessun filtro SQL sul titolo: il confronto lo facciamo qui, ignorando maiuscole e accenti.
             ctx.contentResolver.query(
-                instancesUri(ctx, now - 60L * 60 * 1000), projection, null, null,
+                instancesUri(ctx, now - 60L * 60 * 1000, days), projection, null, null,
                 "${CalendarContract.Instances.BEGIN} ASC"
             )?.use { c ->
                 while (c.moveToNext()) {
                     val title = c.getString(2) ?: continue
-                    if (!title.lowercase().contains(keyword)) continue
                     if (c.getInt(4) == 1) continue // eventi di tutto il giorno
                     val status = if (c.isNull(5)) -1 else c.getInt(5)
                     if (status == CalendarContract.Instances.STATUS_CANCELED) continue
@@ -79,15 +91,15 @@ object CalendarRepo {
                         begin = begin,
                         title = title,
                         description = c.getString(3) ?: "",
-                        calendarName = c.getString(6) ?: ""
+                        calendarName = c.getString(6) ?: "",
+                        end = if (c.isNull(7)) 0L else c.getLong(7)
                     )
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Lettura calendario fallita", e)
         }
-        // Evita doppioni (stesso orario da calendari diversi).
-        return out.distinctBy { it.begin / 60_000L }
+        return out
     }
 
     fun calendars(ctx: Context): List<CalendarInfo> {

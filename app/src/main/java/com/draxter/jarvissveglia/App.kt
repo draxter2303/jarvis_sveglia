@@ -47,9 +47,19 @@ class App : Application() {
             lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
         }
         nm.createNotificationChannel(alarm)
+
+        val reminder = NotificationChannel(
+            CHANNEL_REMINDER, "Promemoria eventi", NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "Notifica all'inizio di ogni evento del calendario"
+            enableVibration(true)
+            lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+        }
+        nm.createNotificationChannel(reminder)
     }
 
     companion object {
         const val CHANNEL_ALARM = "alarm_v1"
+        const val CHANNEL_REMINDER = "reminder_v1"
     }
 }

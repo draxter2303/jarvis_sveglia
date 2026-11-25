@@ -40,6 +40,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var permText: TextView
     private lateinit var permButton: Button
     private lateinit var diagText: TextView
+    private lateinit var reminderList: TextView
+    private lateinit var remindersSwitch: MaterialSwitch
+    private lateinit var reminderOffsetInput: EditText
     private lateinit var enableCalendarsBtn: Button
 
     private val askWriteCalendar = registerForActivityResult(
@@ -74,6 +77,19 @@ class MainActivity : AppCompatActivity() {
         permText = findViewById(R.id.permText)
         permButton = findViewById(R.id.permButton)
         diagText = findViewById(R.id.diagText)
+        reminderList = findViewById(R.id.reminderList)
+        remindersSwitch = findViewById(R.id.switchReminders)
+        reminderOffsetInput = findViewById(R.id.inputReminderOffset)
+        remindersSwitch.isChecked = Prefs.remindersEnabled(this)
+        reminderOffsetInput.setText(Prefs.reminderOffsetMinutes(this).toString())
+        remindersSwitch.setOnCheckedChangeListener { _, checked ->
+            Prefs.setRemindersEnabled(this, checked)
+            refresh(sync = true)
+        }
+        findViewById<Button>(R.id.btnTestReminder).setOnClickListener {
+            AlarmScheduler.testReminder(this, 10)
+            Toast.makeText(this, "Il promemoria di prova arriva tra 10 secondi", Toast.LENGTH_LONG).show()
+        }
         enableCalendarsBtn = findViewById(R.id.btnEnableCalendars)
         enableCalendarsBtn.setOnClickListener {
             if (CalendarRepo.hasWritePermission(this)) enableCalendars()
@@ -93,6 +109,8 @@ class MainActivity : AppCompatActivity() {
             Prefs.setKeyword(this, keywordInput.text.toString().ifBlank { "Sveglia" })
             Prefs.setSnoozeMinutes(this, snoozeInput.text.toString().toIntOrNull() ?: 5)
             Prefs.setOffsetMinutes(this, offsetInput.text.toString().toIntOrNull() ?: 0)
+            Prefs.setReminderOffsetMinutes(this, reminderOffsetInput.text.toString().toIntOrNull() ?: 0)
+            reminderOffsetInput.setText(Prefs.reminderOffsetMinutes(this).toString())
             keywordInput.setText(Prefs.keyword(this))
             snoozeInput.setText(Prefs.snoozeMinutes(this).toString())
             offsetInput.setText(Prefs.offsetMinutes(this).toString())
@@ -160,6 +178,17 @@ class MainActivity : AppCompatActivity() {
         alarmList.text = if (items.isEmpty()) "—" else items.joinToString("\n") {
             val at = it.begin - offset
             "${day.format(Date(at))}  ·  ${time.format(Date(at))}   ${AlarmService.cleanTitle(it.title)}"
+        }
+
+        val reminders = Prefs.scheduledReminders(this)
+        val remOffset = Prefs.reminderOffsetMinutes(this) * 60_000L
+        reminderList.text = when {
+            !Prefs.remindersEnabled(this) -> "Promemoria disattivati"
+            reminders.isEmpty() -> "Nessun altro evento nelle prossime ${Prefs.REMINDER_DAYS * 24} ore"
+            else -> reminders.take(12).joinToString("\n") {
+                val at = it.begin - remOffset
+                "${day.format(Date(at))}  ·  ${time.format(Date(at))}   ${AlarmService.cleanTitle(it.title)}"
+            } + if (reminders.size > 12) "\n… e altri ${reminders.size - 12}" else ""
         }
 
         val snoozeAt = Prefs.snoozeAt(this)

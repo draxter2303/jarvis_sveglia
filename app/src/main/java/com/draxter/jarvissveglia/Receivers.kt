@@ -70,3 +70,57 @@ class SystemEventReceiver : BroadcastReceiver() {
         }.start()
     }
 }
+
+/** Promemoria: notifica con suono all'inizio di ogni evento del calendario. */
+class ReminderReceiver : BroadcastReceiver() {
+    override fun onReceive(ctx: Context, intent: Intent) {
+        val rawTitle = intent.getStringExtra(AlarmScheduler.EXTRA_TITLE) ?: return
+        val title = AlarmService.cleanTitle(rawTitle)
+        val desc = intent.getStringExtra(AlarmScheduler.EXTRA_DESC) ?: ""
+        val begin = intent.getLongExtra(AlarmScheduler.EXTRA_BEGIN, System.currentTimeMillis())
+        val end = intent.getLongExtra(AlarmScheduler.EXTRA_END, 0L)
+        val eventId = intent.getLongExtra(AlarmScheduler.EXTRA_EVENT_ID, 0L)
+        val code = intent.getIntExtra(AlarmScheduler.EXTRA_CODE, title.hashCode())
+
+        val fmt = java.text.SimpleDateFormat("HH:mm", java.util.Locale.ITALY)
+        val time = if (end > begin) "${fmt.format(java.util.Date(begin))}–${fmt.format(java.util.Date(end))}"
+        else fmt.format(java.util.Date(begin))
+
+        // Toccando la notifica si apre l'evento nell'app Calendario.
+        val open = if (eventId > 0) {
+            Intent(Intent.ACTION_VIEW, android.content.ContentUris.withAppendedId(
+                android.provider.CalendarContract.Events.CONTENT_URI, eventId
+            )).putExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, begin)
+                .putExtra(android.provider.CalendarContract.EXTRA_EVENT_END_TIME, end)
+        } else Intent(ctx, MainActivity::class.java)
+        open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val contentPi = android.app.PendingIntent.getActivity(
+            ctx, code, open,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val builder = androidx.core.app.NotificationCompat.Builder(ctx, App.CHANNEL_REMINDER)
+            .setSmallIcon(R.drawable.ic_event)
+            .setContentTitle(title)
+            .setContentText(if (desc.isBlank()) time else "$time · ${desc.lineSequence().first()}")
+            .setStyle(
+                androidx.core.app.NotificationCompat.BigTextStyle()
+                    .bigText(if (desc.isBlank()) time else "$time\n$desc")
+            )
+            .setSubText("Promemoria")
+            .setCategory(androidx.core.app.NotificationCompat.CATEGORY_REMINDER)
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+            .setWhen(begin)
+            .setShowWhen(true)
+            .setContentIntent(contentPi)
+            .setAutoCancel(true)
+        // Sparisce da sola quando l'evento finisce.
+        val now = System.currentTimeMillis()
+        if (end > now) builder.setTimeoutAfter(end - now)
+
+        try {
+            androidx.core.app.NotificationManagerCompat.from(ctx).notify(code, builder.build())
+        } catch (_: SecurityException) {
+        }
+    }
+}
